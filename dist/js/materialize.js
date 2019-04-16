@@ -1,5 +1,6 @@
 /*!
- * Materialize v0.97.6 (http://materializecss.com)
+ * Materialize v0.97.6.1 (http://materializecss.com)
+ * This version contains library change for internal bug fix by orangehrm
  * Copyright 2014-2015 Materialize
  * MIT License (https://raw.githubusercontent.com/Dogfalo/materialize/master/LICENSE)
  */
@@ -1960,7 +1961,7 @@ $(document).ready(function(){
         }
         else {
           // Insert as text;
-          toast.innerHTML = html; 
+          toast.innerHTML = html;
         }
         // Bind hammer
         var hammerHandler = new Hammer(toast, {prevent_default: false});
@@ -3984,7 +3985,8 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
 
         // The state of the picker.
         STATE = {
-            id: ELEMENT.id || 'P' + Math.abs( ~~(Math.random() * new Date()) )
+            id: ELEMENT.id || 'P' + Math.abs( ~~(Math.random() * new Date()) ),
+            handlingOpen: false
         },
 
 
@@ -4194,6 +4196,10 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
 
                     // Bind the document events.
                     $document.on( 'click.' + STATE.id + ' focusin.' + STATE.id, function( event ) {
+
+                        if (STATE.handlingOpen) {
+                          return;
+                        }
 
                         var target = event.target
 
@@ -4547,7 +4553,18 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
             val( $ELEMENT.data('value') ?
                 P.get('select', SETTINGS.format) :
                 ELEMENT.value
-            )
+            ).
+
+            on('mousedown', function() {
+                STATE.handlingOpen = true;
+                var handler = function() {
+                    setTimeout(function() {
+                        $(document).off('mouseup', handler);
+                        STATE.handlingOpen = false;
+                    }, 0);
+                };
+                $(document).on('mouseup', handler);
+            });
 
 
         // Only bind keydown events if the element isn’t editable.
