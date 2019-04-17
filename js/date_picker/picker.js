@@ -40,7 +40,8 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
 
         // The state of the picker.
         STATE = {
-            id: ELEMENT.id || 'P' + Math.abs( ~~(Math.random() * new Date()) )
+            id: ELEMENT.id || 'P' + Math.abs( ~~(Math.random() * new Date()) ),
+            handlingOpen: false
         },
 
 
@@ -250,6 +251,10 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
 
                     // Bind the document events.
                     $document.on( 'click.' + STATE.id + ' focusin.' + STATE.id, function( event ) {
+
+                        if (STATE.handlingOpen) {
+                          return;
+                        }
 
                         var target = event.target
 
@@ -603,8 +608,18 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
             val( $ELEMENT.data('value') ?
                 P.get('select', SETTINGS.format) :
                 ELEMENT.value
-            )
+            ).
 
+            on('mousedown', function() {
+                STATE.handlingOpen = true;
+                var handler = function() {
+                    setTimeout(function() {
+                        $(document).off('mouseup', handler);
+                        STATE.handlingOpen = false;
+                    }, 0);
+                };
+                $(document).on('mouseup', handler);
+            });
 
         // Only bind keydown events if the element isn’t editable.
         if ( !SETTINGS.editable ) {
